@@ -1,0 +1,74 @@
+{
+	"game": {
+		"name": "Deep Heat",
+		"name_safe": "ld42",
+		"description": "Deep Heat",
+
+		"class_name": "DefaultGame",
+		"orientation": "landscape",
+		"clearcolor": "#000000",
+		"version": "0.1.0",
+
+		"folders": {
+			"preproduction": "__preproduction",
+			"resources": "data",
+			"output": "build"
+		}
+	},
+	"developer": {
+		"name": "Force Of Habit",
+		"name_safe": "forceofhabit"
+	},
+	"src_files": [
+		"src/main.cpp",
+		"src/DefaultGame.cpp",
+
+        "src/states/BlankState.cpp",
+		"src/states/InGameState.cpp",
+        "src/states/InstructionsState.cpp",
+        "src/states/MenuState.cpp",
+        "src/states/SplashState.cpp",
+        "src/states/SummaryState.cpp",
+        "src/states/UpgradesState.cpp",
+        "src/states/CreditsState.cpp",
+
+        "src/objects/Object.cpp",
+        "src/objects/Bomb.cpp",
+        "src/objects/Player.cpp",
+        "src/objects/Enemy.cpp",
+        "src/objects/Pickup.cpp",
+        "src/objects/Powerup.cpp",
+        "src/objects/Torch.cpp",
+        "src/objects/MyParticle.cpp",
+        "src/objects/Projectile.cpp",
+        "src/objects/EightWayMovementComponent.cpp",
+
+        "src/util/FMOD.cpp",
+
+		"src/Resources.rc"
+	],
+	"mkdirs": [
+
+	],
+	"resources": {
+        "spritesheets": [
+            {
+                "name": "all",
+                "output_folder": "data",
+                "max_texture_width": 1024,
+                "max_texture_height": 1024,
+                "spacing": 1,
+                "output": "all",
+                "format": "JSON",
+                "files": [
+                	"__preproduction/sprites/",
+                    "__preproduction/sprites/particles/",
+                    "__preproduction/sprites/arena/",
+                    "__preproduction/sprites/upgrades/",
+                    "__preproduction/sprites/player/",
+                	"__preproduction/sprites/fire/"
+                ]
+            }
+        ]
+    }
+}

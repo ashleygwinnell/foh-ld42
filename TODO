@@ -1,0 +1,62 @@
+LD42
+
+DONE
+- player -> enemy collisions.
+- fire turns into ash area on enemy hit.
+- coin collection.
+- sfx
+- progressing between levels
+- shooting co2 properly.
+- enemy types: mini just gets in the way.
+- progression, 5/10 levels/waves, upgrade list
+- show no ammo left. suicide in 5, 4, 3, 2, 1...
+
+DONE - POST LD
+- Camera shake.
+- Balancing tweaks (fire stays alive slightly longer).
+- Intro/player speech message.
+- Add rotate effect between levels.
+- co2 boots upgrade
+- tutorial overlay
+- fix some of the icons
+- make fire boots togglable.
+- implement save data
+- flying enemies that drop fire as they fly. (give a direction and then let them bounce off walls)
+- slug enemy that stays X distance away and then spits fire at player...
+- add shield upgrade (co2 shield) one hit, two hits.
+- level 10
+- Iconise the play/upgrades/back buttons.
+- mute sound/music buttons.
+
+TODO
+- game end cutscene + credits.
+- re-balance gameplay.
+- Fix emscripten fullscreen mode.
+
+MAYBE DO
+- greyscale when getting further into game.
+- grain shader when getting further into game.
+
+WONT DO
+- some sort of forewarning on wave spawns - radial/line/area spawns.
+- enemy types: does roll, large
+- enemy that stays in the dark/runs from player - bat?
+- enemy that avoids co2 - co2 does a knockback.
+- enemy that goes towards the light - moth?
+- implement pillars?
+- implement initial room size?
+- implement torches
+- implement different room shapes
+- new run cycle for player - wider legs!
+- light the torches to open the hatch?
+- implement colour scale for fire ammo
+- doors to other rooms on the same floor?
+- using fire makes the room smaller?!
+- another magnet upgrade?
+- bigger coins?
+- tint arena. move hue slider +25 to get redder.
+- stop music on changing level.
+- other weapon ideas:
+	- auto fire small flame lower accuracy faster shot
+	- fire 3/4/5 at once
+	- fire molotov cocktails/bombs that explode into multiple fires.
