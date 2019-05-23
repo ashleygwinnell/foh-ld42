@@ -41,6 +41,36 @@ void ThreeSliceButton::draw(int x, int y, int width, uint32_t bgcolor) {
 	s_buttonBorderMiddle->drawCenteredScaled(x, y, width - 4, 1.0f);
 }
 
+Image* ThreeSliceSmallerButton::s_buttonBackgroundLeft = NULL;
+Image* ThreeSliceSmallerButton::s_buttonBackgroundMiddle = NULL;
+Image* ThreeSliceSmallerButton::s_buttonBackgroundRight = NULL;
+
+Image* ThreeSliceSmallerButton::s_buttonBorderLeft = NULL;
+Image* ThreeSliceSmallerButton::s_buttonBorderMiddle = NULL;
+Image* ThreeSliceSmallerButton::s_buttonBorderRight = NULL;
+
+void ThreeSliceSmallerButton::init() {
+	s_buttonBackgroundLeft = SpriteSheetStore::getImage("sprites/ui-button-smaller-3s-left.png");
+	s_buttonBackgroundRight = SpriteSheetStore::getImage("sprites/ui-button-smaller-3s-right.png");
+	s_buttonBackgroundMiddle = SpriteSheetStore::getImage("sprites/ui-button-smaller-3s-middle-bg.png");
+
+	s_buttonBorderLeft = SpriteSheetStore::getImage("sprites/ui-button-smaller-3s-left.png");
+	s_buttonBorderRight = SpriteSheetStore::getImage("sprites/ui-button-smaller-3s-right.png");
+	s_buttonBorderMiddle = SpriteSheetStore::getImage("sprites/ui-button-smaller-3s-middle.png");
+}
+void ThreeSliceSmallerButton::draw(int x, int y, int width) {
+	draw(x, y, width, Color::black.asInt());
+}
+void ThreeSliceSmallerButton::draw(int x, int y, int width, uint32_t bgcolor) {
+    Renderer* r = ARK2D::getRenderer();
+    r->setDrawColor(bgcolor);
+	s_buttonBackgroundMiddle->drawCenteredScaled(x, y, width - 4, 1.0f);
+	r->setDrawColor(Color::white);
+	s_buttonBorderLeft->drawAligned(x - (width/2), y, -1, 0);
+	s_buttonBorderRight->drawAligned(x + (width/2), y, 1, 0);
+	s_buttonBorderMiddle->drawCenteredScaled(x, y, width - 4, 1.0f);
+}
+
 
 Image* MyTextBubble::s_buttonBackgroundLeft = NULL;
 Image* MyTextBubble::s_buttonBackgroundMiddle = NULL;
@@ -60,11 +90,94 @@ void MyTextBubble::draw(string text, int x, int y, int width) {
 	s_buttonBackgroundArrow->drawAligned(x, y + (s_buttonBackgroundRight->getHeight()*0.5), 0, -1);
 
 	// draw text
-	DefaultGame::getInstance()->font->drawString(text, x - 1, y+1, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 0.75f);
+	//DefaultGame::getInstance()->font->drawString(text, x - 1, y+1, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 0.75f);
+	DefaultGame::getInstance()->font->asFont()->drawString(text, x - 1, y+1, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 0.75f);
+
+}
+extern "C" void EMSCRIPTEN_KEEPALIVE emscripten_html5helper_setKongUsername(char* href) {
+	ARK2D::getLog()->e(StringUtil::append("setting kong username in c :", string(href)));
+	DefaultGame::getInstance()->m_stats->loggedInAs = href;
+	DefaultGame::getInstance()->m_stats->updateStats();
+
+
+}
+
+void StatsSubmit::init() {
+	loggedInAs = "";
+	#ifdef ARK2D_EMSCRIPTEN_JS
+		//EM_ASM_({
+		EM_ASM({
+
+			if (window.location.href.indexOf("konggames.com") >= 0) {
+				window.ark_loadJSAndThen("https://cdn1.kongregate.com/javascripts/kongregate_api.js", function(){
+					kongregateAPI.loadAPI(function(){
+						window.kongregate = kongregateAPI.getAPI();
+						//kongregate.stats.submit('Score', 1000);
+						//$('#username').text('Username: ' + kongregate.services.getUsername());
+						var username = window.kongregate.services.getUsername();
+						console.log(window.kongregate.services.getUsername());
+
+						 Module.ccall('emscripten_html5helper_setKongUsername', // name of C function
+		                        null, // void return type
+		                        [ 'string' ], // argument types,
+		                        [ username ] //, // arguments
+		                        //{ async:true } // optional options
+		                    );
+
+
+					});
+				});
+			}
+			else {
+				console.error("STATS INIT");
+			}
+
+
+
+			//Pointer_stringify($0);
+		});//, gameId, apiKey, guestAccessKey, guestAccessUrl);
+	#endif
+}
+void StatsSubmit::submit(string name, int val) {
+	EM_ASM_ARGS({
+		var name = UTF8ToString($0);
+		var val = $1;
+		console.error("STATS SUBMIT: " + name + " = " + val);
+		if (window.location.href.indexOf("konggames.com") >= 0) {
+			if (!window.kongregate) {
+				console.warn("cannot submit stat as kong not loaded yet.");
+				return;
+			}
+			window.kongregate.stats.submit(name, val); // Replace / 136572
+		}
+	}, name.c_str(), val);
+}
+void StatsSubmit::updateStats() {
+	// Update stats.
+	DefaultGame* dg = DefaultGame::getInstance();
+
+	bool completed = dg->m_save->getBoolean("game_complete", false);
+	if (completed) {
+		dg->m_stats->submit("Game Complete", 1);
+	}
+	bool viewedCredits = dg->m_save->getBoolean("viewed_credits", false);
+	if (viewedCredits) {
+		dg->m_stats->submit("View Credits", 1);
+	}
+
+	bool purchasedAnything = dg->m_save->getBoolean("purchasedAnything", false);
+	if (purchasedAnything) {
+		dg->m_stats->submit("Upgraded", 1);
+	}
+
+	if (dg->stateUpgrades->hasAllUpgrades()) {
+		dg->m_stats->submit("All Upgrades", 1);
+	}
 }
 
 
 bool DefaultGame::s_debug = false;
+bool DefaultGame::s_armorGames = true;
 
 DefaultGame::DefaultGame(string title):
 	StateBasedGame(title),
@@ -76,10 +189,87 @@ DefaultGame::DefaultGame(string title):
     m_explosions(),
     m_recorder(NULL)
     {
+    DefaultGame::s_armorGames = false;
+
 
 }
 
 void DefaultGame::initStates(GameContainer* container) {
+
+	m_stats = new StatsSubmit();
+
+
+	#ifdef ARK2D_EMSCRIPTEN_JS
+
+		auto sitelock = [container](vector<string> sites, std::function<void()> onFail)->bool {
+			string url = HTML5Helper::getWindowHref();
+			ARK2D::getLog()->e(StringUtil::append("url: ", url));
+			bool found = false;
+			for(int i = 0; i < sites.size(); i++) {
+				ARK2D::getLog()->e(string("comparing ") + sites[i] + string(" to ") + url);
+				if (url.find(sites[i]) != string::npos) {
+					found = true;
+				}
+			}
+			if (!found) {
+				onFail();
+			}
+			return !found;
+		};
+
+		vector<string> sitelockUrls = {
+			// force of habit
+			"localhost",
+			"forceofhab.it",
+			// newgrounds
+			"newgrounds.com",
+			"ungrounded.net",
+			// kongregate
+			"konggames.com",
+			"*.konggames.com",
+			// game jolt
+			"gamejolt.com",
+			"gamejolt.net",
+			// itchio
+			"itch.io",
+			"hwcdn.net",
+			// armor games
+			"http://games.armorgames.com",
+			"https://games.armorgames.com",
+			"http://preview.armorgames.com",
+			"https://preview.armorgames.com",
+			"http://cache.armorgames.com",
+			"https://cache.armorgames.com",
+			"http://cdn.armorgames.com",
+			"https://cdn.armorgames.com",
+			"http://gamemedia.armorgames.com",
+			"https://gamemedia.armorgames.com",
+			"http://files.armorgames.com",
+			"https://files.armorgames.com",
+			"http://*.armorgames.com",
+			"https://*.armorgames.com",
+			// crazygames
+			"crazygames.com",
+			"1001juegos.com",
+			"gioca.re",
+			"speelspelletjes.nl",
+			"onlinegame.co.id"
+		};
+
+		bool wrongUrl = sitelock(sitelockUrls, [container]()->void {
+			ErrorDialog::createAndShow("Sitelocked!");
+			//container->close();
+		});
+		if (wrongUrl) {
+			stateBlank = new BlankState();
+			addState(stateBlank);
+			enterState(stateBlank);
+
+			container->setSize(284*3, 160*3);
+
+			return;
+		}
+	#endif
 
 	m_recorder = new GIFRecorder("output.gif", 0, 0, container->getWidth(), container->getHeight());
 
@@ -90,8 +280,17 @@ void DefaultGame::initStates(GameContainer* container) {
 
 
 
-	// hsvShader = new HSVShader();
-	// hsvShader->load();
+
+	hsvShader = new HSVShader();
+	hsvShader->load();
+
+	// grainShader = new GrainShader();
+	// grainShader->load();
+	// grainShader->resolution.set(1024,512);
+	// grainShader->strength = 1;
+	// grainShader->timer = 0;
+
+	// grainFBO = new FBO(284*3, 160*3);
 
 	stateBlank = new BlankState();
 	stateSplash = new SplashState();
@@ -101,6 +300,8 @@ void DefaultGame::initStates(GameContainer* container) {
 	stateSummary = new SummaryState();
 	stateUpgrades = new UpgradesState();
 	stateCredits = new CreditsState();
+	stateArmorGames = new ArmorGamesState();
+	stateAutoplayFix = new AutoplayFixState();
 
 	Renderer::setInterpolation(Renderer::INTERPOLATION_NEAREST);
 	spritesheet = Resource::get("all.png")->asImage();
@@ -134,6 +335,8 @@ void DefaultGame::initStates(GameContainer* container) {
 	m_sfxEnemyDeathMedium = new ArkFMODSound(m_fmod, "sfx/enemy-death-medium.wav", 1);
 
 	m_save = Resource::get("save.kpf")->asKeyPairFile();
+
+
 	m_coins = m_save->getInteger("coins", 0);
 	//m_save->getBoolean("playedCutscene_intro", false);
 
@@ -148,6 +351,7 @@ void DefaultGame::initStates(GameContainer* container) {
 
 	m_floor = container->getHeight() - 24;
 	ThreeSliceButton::init();
+	ThreeSliceSmallerButton::init();
 	MyTextBubble::init();
 	m_buttonbg = SpriteSheetStore::getImage("sprites/ui-button.png");
 	m_gradient = SpriteSheetStore::getImage("sprites/gradient.png");
@@ -161,10 +365,17 @@ void DefaultGame::initStates(GameContainer* container) {
 	addState(stateSummary);
 	addState(stateUpgrades);
 	addState(stateCredits);
+	addState(stateArmorGames);
+	addState(stateAutoplayFix);
 
 
 	//enterState(stateMenu);
-	enterState(stateSplash);
+	if (s_armorGames) {
+		enterState(stateArmorGames);
+	}
+	else {
+		enterState(stateSplash);
+	}
 	//container->setSize(284*4, 160*4);
 	container->setSize(284*3, 160*3);
 
@@ -199,7 +410,7 @@ void DefaultGame::update(GameContainer* container, GameTimer* timer) {
 	StateBasedGame::update(container, timer);
 
 	Input* i = ARK2D::getInput();
-	if (i->isGamepadButtonPressed(Gamepad::BUTTON_ACTIVATE) || i->isKeyPressed(Input::KEY_F)) {
+	if ((i->isGamepadButtonPressed(Gamepad::BUTTON_ACTIVATE) || i->isKeyPressed(Input::KEY_F)) && !s_armorGames) {
 		container->setFullscreen(!container->isFullscreen());
 	}
 
@@ -231,20 +442,26 @@ void DefaultGame::update(GameContainer* container, GameTimer* timer) {
 		}
 	}
 
-	if (i->isKeyPressed(Input::KEY_SPACE) && !m_recorder->isRecording()) {
-        m_recorder->recordForLength(2.0f);
-    }
-    if (i->isKeyPressed(Input::KEY_0)) {
-    	if (!m_recorder->isRecording()) {
-    		m_recorder->record();
-    	} else {
-    		m_recorder->cut();
-    		m_recorder->save();
-    	}
-    }
-    m_recorder->update(timer->getDelta());
+	if (m_recorder != NULL) {
+		if (i->isKeyPressed(Input::KEY_9)) {
+			m_recorder->screenshotEvery(0.5, 1000);
+		}
+		if (i->isKeyPressed(Input::KEY_SPACE) && !m_recorder->isRecording()) {
+	        m_recorder->recordForLength(2.0f);
+	    }
+	    if (i->isKeyPressed(Input::KEY_0)) {
+	    	if (!m_recorder->isRecording()) {
+	    		m_recorder->record();
+	    	} else {
+	    		m_recorder->cut();
+	    		m_recorder->save();
+	    	}
+	    }
+	    m_recorder->update(timer->getDelta());
+	}
 
-	m_fmod->update();
+	if (m_fmod != NULL) { m_fmod->update(); }
+
 	if (getCurrentState() == stateInGame) {
 		if (m_musicMenu->isPlaying()) { m_musicMenu->stop(); }
 		if (m_musicSummary->isPlaying()) { m_musicSummary->stop(); }
@@ -293,6 +510,11 @@ void DefaultGame::update(GameContainer* container, GameTimer* timer) {
 			m_musicMenu->setLowpassFrequency(500.0f); //dg->m_musicGame->setLowpassFrequency(22100.0f);
 		}
 	}
+	else if (getCurrentState() == stateArmorGames || getCurrentState() == stateAutoplayFix) {
+		if (m_musicMenu->isPlaying()) {	m_musicMenu->stop(); }
+		if (m_musicGame->isPlaying()) { m_musicGame->stop(); }
+		if (m_musicSummary->isPlaying()) { m_musicSummary->stop(); }
+	}
 
 	m_reticuleRotation += timer->getDelta() * 135.0f;
 
@@ -310,21 +532,45 @@ void DefaultGame::renderBackground() {
 void DefaultGame::render() {
 
 	//hsvShader->set(1.0f, MathUtil::randBetweenf(0.8f,1.0f), 1.0f);
-	// hsvShader->set(1.0f, 1.0f, 1.0f);
-	// hsvShader->start();
-	renderBackground();
-
-	StateBasedGame::render();
-
-
+	//hsvShader->set(1.0f, 1.0f, 1.0f);
 	Renderer* r = ARK2D::getRenderer();
 
-	r->setDrawColor(Color::white);
-	Input* in = ARK2D::getInput();
-	m_reticule->setRotation(m_reticuleRotation);
-	m_reticule->drawCentered(in->getMouseX(), in->getMouseY());
+	auto renderGame = [this, r]()->void {
 
-	// hsvShader->stop();
+		hsvShader->start();
+		renderBackground();
+
+		StateBasedGame::render();
+
+		r->setDrawColor(Color::white);
+		Input* in = ARK2D::getInput();
+		if (m_reticule != NULL) {
+			m_reticule->setRotation(m_reticuleRotation);
+			m_reticule->drawCentered(in->getMouseX(), in->getMouseY());
+		}
+
+		hsvShader->stop();
+	};
+
+   	//grainFBO->bind();
+	///grainFBO->bind_2d();
+	//renderGame();
+	//grainFBO->unbind_2d();
+	//grainFBO->unbind();
+
+	r->setDrawColor(Color::white);
+	renderGame();
+
+    // grainShader->timer += 0.016f;
+    // if (grainShader->timer >= 4.0f) {
+    // 	grainShader->timer = 0.0f;
+    // }
+    // grainShader->start();
+    // r->setDrawColor(Color::white, 1.0f);
+    // (*grainFBO->getImage())->draw(0, 0);
+    // grainShader->stop();
+
+
 
 	if (m_recorder != NULL) m_recorder->render();
 }
@@ -332,6 +578,7 @@ void DefaultGame::render() {
 void DefaultGame::resize(GameContainer* container, int width, int height) {
 	StateBasedGame::resize(container, width, height);
 	if (m_recorder != NULL) m_recorder->resize(0,0,width,height);
+	//if (grainFBO != NULL) grainFBO->resize(width,height);
 }
 
 DefaultGame* DefaultGame::getInstance() {

@@ -22,8 +22,8 @@ class MapLocation {
 class SummaryState : public GameState {
 	public:
 
-		ARK::UI::Button* m_buttonRetry;
-		ARK::UI::Button* m_buttonMenu;
+		Image* iconNext;
+		ARK::UI::Button* m_buttonNext;
 
 		float m_introTimer;
 		float m_introDuration;
@@ -32,27 +32,12 @@ class SummaryState : public GameState {
 		float m_outroDuration;
 		GameState* m_outroTo;
 
-		float m_showUITimer;
-		float m_showUIDuration;
+		float m_timer;
 
-		Image* m_map;
-		Image* m_mapSadFace;
-		Image* m_mapPresent;
-		vector<MapLocation*> m_mapLocations;
-
-		Image* m_santaSleigh;
-		Image* m_santaHuman;
-		Image* m_santaCarl;
-		float m_santaTimer;
-		float m_santaDuration;
-
+		Animation* m_playerAnimation;
 		bool m_finalWin;
-		int m_mapLocationsRuined;
 
 		CameraShake* m_cameraShake;
-		vector<string> winLines;
-		vector<string> loseLines;
-		int loseIndex;
 
 		SummaryState();
 		void enter(GameContainer* container, StateBasedGame* game, GameState* from);

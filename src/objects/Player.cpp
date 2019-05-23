@@ -69,7 +69,7 @@ Player::Player():
 
 	m_movement = new EightWayMovementComponent(this);
 	m_movement->setController(true, 0, Gamepad::ANALOG_STICK_1_X);
-	m_movement->setKeysWASD();
+	m_movement->setKeysArrowsWASD();
 
 	reset();
 }
@@ -222,6 +222,14 @@ void Player::update(GameContainer* container, GameTimer* timer) {
 		}
 	}
 	if (m_lostLifeTimer > 0.0f) {
+
+
+		dg->hsvShader->set(
+			0.005f * float(igs->m_level),
+			Easing::easebetween(Easing::QUADRATIC_OUT, m_lostLifeTimer, 0.0f, 1.0f, m_lostLifeDuration),
+			Easing::easebetween(Easing::QUADRATIC_IN, m_lostLifeTimer, 0.4f, 1.0f, m_lostLifeDuration)
+		);
+
 		m_lostLifeTimer += timer->getDelta();
 		if (m_lostLifeTimer >= m_lostLifeDuration) {
 			m_lostLifeTimer = 0.0f;
@@ -235,7 +243,8 @@ void Player::update(GameContainer* container, GameTimer* timer) {
 //            // ...
 //        }
 //        else
-        if (dg->stateUpgrades->getUpgradeById(Upgrade::UPGRADE_HOT_FEET)->purchased) {
+        if (dg->stateUpgrades->getUpgradeById(Upgrade::UPGRADE_HOT_FEET)->purchased &&
+        	dg->stateUpgrades->getUpgradeById(Upgrade::UPGRADE_HOT_FEET)->equipped) {
 
 			// spawn flame
 			float angle = MathUtil::anglef(m_lastFlameAtX, m_lastFlameAtY, m_bounds->getCenterX(), m_bounds->getCenterY());

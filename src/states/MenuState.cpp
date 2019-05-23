@@ -36,6 +36,10 @@ void MenuState::leave(GameContainer* container, StateBasedGame* game, GameState*
 	// 	}
 	// }
 
+	if (dg->stateMenu->m_settingsOpen) {
+		dg->stateMenu->m_settingsClosingTimer = 0.01f;
+	}
+
 }
 void menuEvent_help() {
 	//SystemUtil::openBrowserToURL("http://twitter.com/forcehabit");
@@ -46,6 +50,8 @@ void menuEvent_help() {
 
 	dg->stateMenu->m_outroTo = dg->stateCredits;
 	dg->stateMenu->m_outroTimer = 0.01f;
+
+
 
     dg->m_sfxMenuSelect->play();
 
@@ -63,10 +69,12 @@ void menuEvent_settings() {
 	}
 }
 void menuEvent_fullscreen() {
-	DefaultGame* dg = DefaultGame::getInstance();
-	dg->m_sfxMenuSelect->play();
+	if (!DefaultGame::s_armorGames) {
+		DefaultGame* dg = DefaultGame::getInstance();
+		dg->m_sfxMenuSelect->play();
 
-	ARK2D::getContainer()->setFullscreen(!ARK2D::getContainer()->isFullscreen());
+		ARK2D::getContainer()->setFullscreen(!ARK2D::getContainer()->isFullscreen());
+	}
 }
 void menuEvent_musicToggle() {
 	DefaultGame* dg = DefaultGame::getInstance();
@@ -106,6 +114,8 @@ void menuEvent_upgrades() {
 void MenuState::init(GameContainer* container, StateBasedGame* game) {
 	DefaultGame* dg = DefaultGame::getInstance();
 	m_selectedIndex = 0;
+
+	armorGamesOverlay = new ArmorGamesOverlay();
 
 	m_buttonPlay = new ARK::UI::Button();
 	m_buttonPlay->setLocation(0, 0);
@@ -260,7 +270,7 @@ void MenuState::update(GameContainer* container, StateBasedGame* game, GameTimer
 		game->enterState(dg->stateSplash);
 	}
 	if (i->isKeyPressed(Input::KEY_C)) {
-		game->enterState(dg->stateSummary);
+        game->enterState(dg->stateSummary); //, new FadeToColor);
 	}
 	if (i->isKeyPressed(Input::KEY_U)) {
 		game->enterState(dg->stateUpgrades);
@@ -293,6 +303,10 @@ void MenuState::update(GameContainer* container, StateBasedGame* game, GameTimer
 	juiceTimer += timer->getDelta();
 	if (juiceTimer >= juiceDuration) {
 		juiceTimer -= juiceDuration;
+	}
+
+	if (DefaultGame::s_armorGames) {
+		armorGamesOverlay->update();
 	}
 }
 
@@ -327,6 +341,16 @@ void MenuState::drawDitherGradient(float on) {
 	imageGradient->drawFlipped(imageGradientOffsetX - imageGradient->getWidth(), container->getHeight() - imageGradient->getHeight() + y, false, true);
 }
 
+float MenuState::getOutYMultiplier() {
+	float baseY = 0;
+	if (m_introTimer > 0.0f) {
+		baseY = Easing::easebetween(Easing::QUADRATIC_OUT, m_introTimer, 1.0f, 0.0f, m_introDuration);
+	}
+	else if (m_outroTimer > 0.0f) {
+		baseY = Easing::easebetween(Easing::QUADRATIC_OUT, m_outroTimer, 0.0f, 1.0f, m_outroDuration);
+	}
+	return baseY;
+}
 void MenuState::render(GameContainer* container, StateBasedGame* game, Renderer* r) {
 	DefaultGame* dg = DefaultGame::getInstance();
 
@@ -387,8 +411,10 @@ void MenuState::render(GameContainer* container, StateBasedGame* game, Renderer*
 	ThreeSliceButton::draw(m_buttonFOH->transform.position.x, baseYBottom + m_buttonFOH->transform.position.y, m_buttonFOH->getWidth());
 	iconHelp->drawCentered(m_buttonFOH->transform.position.x, baseYBottom + m_buttonFOH->transform.position.y);
 
-	dg->m_cornerBox->drawCentered(m_buttonFullscreen->transform.position.x, baseYBottom + m_buttonFullscreen->transform.position.y);
-	iconFullscreen->drawCentered(m_buttonFullscreen->transform.position.x, baseYBottom + m_buttonFullscreen->transform.position.y);
+	if (!DefaultGame::s_armorGames) {
+		dg->m_cornerBox->drawCentered(m_buttonFullscreen->transform.position.x, baseYBottom + m_buttonFullscreen->transform.position.y);
+		iconFullscreen->drawCentered(m_buttonFullscreen->transform.position.x, baseYBottom + m_buttonFullscreen->transform.position.y);
+	}
 
 	Image* musicIcon = (dg->m_musicVolume == 1.0f)?iconMusicOn:iconMusicOff;
 	dg->m_cornerBox->drawCentered(m_buttonMusic->transform.position.x, baseYBottom + m_buttonMusic->transform.position.y);
@@ -400,6 +426,16 @@ void MenuState::render(GameContainer* container, StateBasedGame* game, Renderer*
 
 	dg->m_cornerBox->drawCentered(m_buttonSettings->transform.position.x, baseYBottom + m_buttonSettings->transform.position.y);
 	iconSettings->drawCentered(m_buttonSettings->transform.position.x, baseYBottom + m_buttonSettings->transform.position.y);
+
+	if (DefaultGame::s_armorGames) {
+		armorGamesOverlay->render();
+	}
+
+	bool isKong = HTML5Helper::getWindowHref().find("konggames.com") != string::npos;
+	if (isKong && dg->m_stats->loggedInAs.length() > 0) {
+		StringUtil::toUpper(dg->m_stats->loggedInAs);
+		dg->font->drawString(StringUtil::append("LOGGED IN AS: ", dg->m_stats->loggedInAs), container->getWidth()*0.5f, baseYBottom + container->getHeight()-6 - 6, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 0.5f);
+	}
 
 	dg->font->drawString("(C) FORCE OF HABIT", container->getWidth()*0.5f, baseYBottom + container->getHeight()-6, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 0.5f);
 }
@@ -413,6 +449,9 @@ bool MenuState::keyPressed(unsigned int key) {
 	m_buttonMusic->keyPressed(key);
 	m_buttonSFX->keyPressed(key);
 	m_buttonSettings->keyPressed(key);
+	if (DefaultGame::s_armorGames) {
+		armorGamesOverlay->keyPressed(key);
+	}
 	return false;
 }
 bool MenuState::keyReleased(unsigned int key) {
@@ -423,6 +462,9 @@ bool MenuState::keyReleased(unsigned int key) {
 	m_buttonMusic->keyReleased(key);
 	m_buttonSFX->keyReleased(key);
 	m_buttonSettings->keyReleased(key);
+	if (DefaultGame::s_armorGames) {
+		armorGamesOverlay->keyReleased(key);
+	}
 	return false;
 }
 bool MenuState::mouseMoved(int x, int y, int oldx, int oldy) {
@@ -433,6 +475,9 @@ bool MenuState::mouseMoved(int x, int y, int oldx, int oldy) {
 	m_buttonMusic->mouseMoved(x, y, oldx, oldy);
 	m_buttonSFX->mouseMoved(x, y, oldx, oldy);
 	m_buttonSettings->mouseMoved(x, y, oldx, oldy);
+	if (DefaultGame::s_armorGames) {
+		armorGamesOverlay->mouseMoved(x, y, oldx, oldy);
+	}
 	return false;
 }
 

@@ -30,6 +30,11 @@ class EightWayMovementComponent {
 		unsigned int m_keyLeft;
 		unsigned int m_keyRight;
 
+		unsigned int m_key2Up;
+		unsigned int m_key2Down;
+		unsigned int m_key2Left;
+		unsigned int m_key2Right;
+
 		unsigned int m_controllerUp;
 		unsigned int m_controllerDown;
 		unsigned int m_controllerLeft;
@@ -52,11 +57,12 @@ class EightWayMovementComponent {
 		bool isRightDown();
 
 		bool isJumpPressed();
-		
+
 		void setController(bool b, unsigned int controllerIndex, unsigned int controllerAxisIndex);
 		void setKeys(unsigned int up, unsigned int down, unsigned int left, unsigned int right);
 		void setKeysArrows() { setKeys(Input::KEY_UP, Input::KEY_DOWN, Input::KEY_LEFT, Input::KEY_RIGHT); }
 		void setKeysWASD() { setKeys(Input::KEY_W, Input::KEY_S, Input::KEY_A, Input::KEY_D); }
+		void setKeysArrowsWASD();
 		void setSnap(bool b) { m_snap = b; }
 
 		void reset();

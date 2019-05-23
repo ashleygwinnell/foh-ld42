@@ -8,13 +8,15 @@ SplashState::SplashState():
 }
 
 unsigned int SplashState::id() {
-	return StatesList::STATE_BLANK;
+	return StatesList::STATE_SPLASH;
 }
 
 void SplashState::enter(GameContainer* container, StateBasedGame* game, GameState* from) {
 	m_introTimer = 0.01f;
 	m_waitTimer = 0.0f;
 	m_outroTimer = 0.0f;
+
+	DefaultGame::getInstance()->m_stats->init();
 }
 
 void SplashState::leave(GameContainer* container, StateBasedGame* game, GameState* to) {

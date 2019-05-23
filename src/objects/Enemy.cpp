@@ -81,23 +81,24 @@ void Enemy::reset() {
 	GameContainer* container = ARK2D::getContainer();
 
 	m_radius = 4;
-	m_targetAngleOffset = -40.0f + MathUtil::randBetweenf(0.0f, 80.0f);;
 
-	m_bumpPower = 100.0f;
 
 	m_velocity->set(0, 0);
 	m_velocityMax->set(40, 40);
-	m_damagable = true;
-	//m_canDieByBomb = true;
-
-	m_introTimer = 0.0f;
-	m_introDuration = 0.3f;
 
 	m_followPlayer = false;
 	m_followPlayerDistance = 0;
 	m_followVelocity = false;
+	m_targetAngleOffset = -40.0f + MathUtil::randBetweenf(0.0f, 80.0f);;
+	m_bumpPower = 100.0f;
+
+	m_damagable = true;
+
+	m_introTimer = 0.0f;
+	m_introDuration = 0.3f;
 
 	m_hitTimes = 0;
+	m_hitHealth = 0;
 	m_hitTimer = 0.0f;
 	m_hitDuration = 0.5f;
 
@@ -127,6 +128,10 @@ void Enemy::reset() {
 	m_creatingChildrenPalette.clear();
 	m_creatingChildrenTimer = 0.0f;
 	m_creatingChildrenDuration = 0.0f;
+
+	m_speedMin = 0;
+	m_speedMax = 0;
+	m_speed = 0;
 }
 
 void Enemy::start(EnemyType et) {
@@ -171,7 +176,7 @@ void Enemy::start(EnemyType et) {
 		m_enemyHopHeight = 1.5;
 
 		m_speedMin = 20.0f;
-		m_speedMax = 40.0f;
+		m_speedMax = 35.0f;
 
 		m_hitHealth = 2;
 
@@ -184,8 +189,8 @@ void Enemy::start(EnemyType et) {
 		m_enemyHopDuration = 0.35f;
 		m_enemyHopHeight = 2.5;
 
-		m_speedMin = 20.0f;
-		m_speedMax = 50.0f;
+		m_speedMin = 15.0f;
+		m_speedMax = 45.0f;
 
 		m_hitHealth = 4;
 
@@ -270,6 +275,7 @@ bool Enemy::keepInBounds() {
 	if (m_followVelocity) {
 		m_velocityMax->set(m_velocity);
 	}
+	return b;
 }
 
 void Enemy::smoke() {
@@ -482,13 +488,14 @@ void Enemy::checkPlayerCollisions(bool firstPass, bool movePlayer) {
                                             igs->m_player->m_bounds->getCenterX(),
                                             igs->m_player->m_bounds->getCenterY()
                                             ) - igs->m_player->m_radius - m_radius + 1.0f;
-	    float speed = std::max(std::min(distance, m_speedMax),m_speedMin);
+	    float speed = std::max<float>(std::min<float>(distance, m_speedMax),m_speedMin);
 	    //if (m_type == TYPE_LARGE) {
 	    	//speed = std::max(std::min(distance, 100.0f),30.0f);
 	    //}
 	    if (distance < m_followPlayerDistance) {
 	    	speed = 0;
 	    }
+	    m_speed = speed;
 
 	    m_velocity->set(0.0f, 0.0f);
 		MathUtil::moveAngle<float>(m_velocity, angle - 10 + MathUtil::randBetweenf(0.0f, 20.0f) + m_targetAngleOffset, speed);
@@ -497,6 +504,7 @@ void Enemy::checkPlayerCollisions(bool firstPass, bool movePlayer) {
 	else if (m_followVelocity) {
 		// .. keep velocity.
 		m_velocity->set(m_velocityMax);
+		m_speed = MathUtil::distance(0,0,m_velocity->getX(), m_velocity->getY());
 	}
 
 	return;
@@ -703,7 +711,15 @@ void Enemy::render(GameContainer* container, Renderer* r)
 	}
 	*/
 
+	if (DefaultGame::s_debug) {
+		r->setDrawColor(Color::white);
+		dg->font->drawString(StringUtil::appendf("", m_speed), m_bounds->getCenterX(), m_bounds->getMinY() - 1, Renderer::ALIGN_CENTER, Renderer::ALIGN_BOTTOM, 0.0f, 0.5f);
+		//dg->font->drawString(StringUtil::appendf("", m_velocity->), m_bounds->getCenterX(), m_bounds->getMinY() - 1, Renderer::ALIGN_CENTER, Renderer::ALIGN_BOTTOM, 0.0f, 0.5f);
 
+		r->setDrawColor(Color::cyan);
+		float lineAngleRad = MathUtil::toRadians(m_velocity->angle());
+		r->drawLine(m_bounds->getCenterX(), m_bounds->getCenterY(), m_bounds->getCenterX() + (5*cos(lineAngleRad)), m_bounds->getCenterY() + (5*sin(lineAngleRad)));
+	}
 
 
 

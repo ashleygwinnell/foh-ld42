@@ -55,11 +55,19 @@ void EightWayMovementComponent::setController(bool b, unsigned int controllerInd
 
 }
 void EightWayMovementComponent::setKeys(unsigned int up, unsigned int down, unsigned int left, unsigned int right) {
-	m_keyUp = up;
-	m_keyDown = down;
-	m_keyLeft = left;
-	m_keyRight = right;
+	m_keyUp = m_key2Up = up;
+	m_keyDown = m_key2Down = down;
+	m_keyLeft = m_key2Left = left;
+	m_keyRight = m_key2Right = right;
 }
+void EightWayMovementComponent::setKeysArrowsWASD() {
+	setKeys(Input::KEY_W, Input::KEY_S, Input::KEY_A, Input::KEY_D);
+	m_key2Up = Input::KEY_UP;
+	m_key2Down = Input::KEY_DOWN;
+	m_key2Left = Input::KEY_LEFT;
+	m_key2Right = Input::KEY_RIGHT;
+}
+
 
 bool EightWayMovementComponent::isUpDown() {
 	return (m_stickPushing && (
@@ -107,35 +115,33 @@ void EightWayMovementComponent::update(GameContainer* container, GameTimer* time
 
 		bool keyDown = false;
 		float angle = 0;
-		if (in->isKeyDown(m_keyUp) && in->isKeyDown(m_keyDown)) {
+		if (in->isKeyDown({m_keyUp,m_key2Up}) && in->isKeyDown({m_keyDown,m_key2Down})) {
 
 		}
-		else if (in->isKeyDown(m_keyLeft) && in->isKeyDown(m_keyRight)) {
-			
-		} 
-		else if (in->isKeyDown(m_keyUp) && in->isKeyDown(m_keyLeft)) {
+		else if (in->isKeyDown({m_keyLeft,m_key2Left}) && in->isKeyDown({m_keyRight, m_key2Right})) {
+
+		} else if (in->isKeyDown({m_keyUp,m_key2Up}) && in->isKeyDown({m_keyLeft, m_key2Left})) {
 			angle = -135;
 			keyDown = true;
-		} else
-		if (in->isKeyDown(m_keyDown) && in->isKeyDown(m_keyLeft)) {
+		} else if (in->isKeyDown({m_keyDown,m_key2Down}) && in->isKeyDown({m_keyLeft, m_key2Left})) {
 			angle = 135;
 			keyDown = true;
-		} else if (in->isKeyDown(m_keyUp) && in->isKeyDown(m_keyRight)) {
+		} else if (in->isKeyDown({m_keyUp,m_key2Up}) && in->isKeyDown({m_keyRight, m_key2Right})) {
 			angle = -45;
 			keyDown = true;
-		}  else if (in->isKeyDown(m_keyDown) && in->isKeyDown(m_keyRight)) {
+		}  else if (in->isKeyDown({m_keyDown,m_key2Down}) && in->isKeyDown({m_keyRight, m_key2Right})) {
 			angle = 45;
 			keyDown = true;
-		} else if (in->isKeyDown(m_keyUp)) {
+		} else if (in->isKeyDown({m_keyUp,m_key2Up})) {
 			angle = -90;
 			keyDown = true;
-		} else if (in->isKeyDown(m_keyDown)) {
+		} else if (in->isKeyDown({m_keyDown,m_key2Down})) {
 			angle = 90;
 			keyDown = true;
-		} else if (in->isKeyDown(m_keyLeft)) {
+		} else if (in->isKeyDown({m_keyLeft,m_key2Left})) {
 			angle = 180;
 			keyDown = true;
-		} else if (in->isKeyDown(m_keyRight)) {
+		} else if (in->isKeyDown({m_keyRight,m_key2Right})) {
 			angle = 0;
 			keyDown = true;
 		}
@@ -176,7 +182,7 @@ void EightWayMovementComponent::update(GameContainer* container, GameTimer* time
 
 		float rawdistance = MathUtil::distance(0, 0, x, y);
 		float distance = 1.0f;
-		
+
 		if (rawdistance > 0.25f) {
 			m_velocity->set(0, 0);
 			MathUtil::moveAngle<float>(m_velocity, angle, distance);

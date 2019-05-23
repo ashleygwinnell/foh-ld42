@@ -17,11 +17,14 @@ class CreditsState : public GameState {
 		Image* iconFacebook;
 		Image* iconTwitter;
 		Image* iconMail;
+		Image* iconDiscord;
 
 		ARK::UI::Button* m_buttonBack;
+		ARK::UI::Button* m_buttonWeb;
 		ARK::UI::Button* m_buttonMail;
 		ARK::UI::Button* m_buttonTwitter;
 		ARK::UI::Button* m_buttonFacebook;
+		ARK::UI::Button* m_buttonDiscord;
 
 		float m_introTimer;
 		float m_introDuration;
@@ -29,6 +32,8 @@ class CreditsState : public GameState {
 		float m_outroTimer;
 		float m_outroDuration;
 		GameState* m_outroTo;
+
+		float m_timer;
 
 		CreditsState();
 		void enter(GameContainer* container, StateBasedGame* game, GameState* from);

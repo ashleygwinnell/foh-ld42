@@ -143,8 +143,8 @@ void Pickup::update(GameContainer* container, GameTimer* timer) {
 		float angle = MathUtil::anglef(m_bounds->getCenterX(), m_bounds->getCenterY(), igs->m_player->m_bounds->getCenterX(), igs->m_player->m_bounds->getCenterY() );
 		float distance = MathUtil::distance(m_bounds->getCenterX(), m_bounds->getCenterY(), igs->m_player->m_bounds->getCenterX(), igs->m_player->m_bounds->getCenterY() );
 
-		float m_movementSpeedMin = 10.0f;
-		float m_movementSpeedMax = 35.0f;
+		float m_movementSpeedMin = 1.0f;
+		float m_movementSpeedMax = 60.0f;
 		float m_movementSpeedDistance = 100.0f;
 
 		float movementSpeedMax = m_movementSpeedMax; // 250.0f
@@ -158,7 +158,7 @@ void Pickup::update(GameContainer* container, GameTimer* timer) {
 		// was 250.
 		// now 350
 		// it should be an upgrade!
-		float speed = Easing::easebetween(Easing::QUADRATIC_OUT, distance, m_movementSpeedMin, movementSpeedMax, m_movementSpeedDistance);
+		float speed = Easing::easebetween(Easing::QUADRATIC_OUT, distance, m_movementSpeedMax, m_movementSpeedMin, m_movementSpeedDistance);
 
 		m_velocity->set(0, 0);
 		MathUtil::moveAngle<float>(m_velocity, angle, speed);
@@ -292,7 +292,7 @@ void Pickup::render(GameContainer* container, Renderer* r)
 		img->drawCenteredScaled(float(m_bounds->getCenterX()), float(ceil(m_bounds->getCenterY())), scale, scale);
 	} else {
 		img->setRotation(rotation);
-		img->drawAligned(m_bounds->getCenterX(), m_bounds->getMaxY(), Renderer::ALIGN_CENTER, Renderer::ALIGN_BOTTOM, scale);
+		img->drawAligned(m_bounds->getCenterX(), m_bounds->getMaxY(), Renderer::ALIGN_CENTER, Renderer::ALIGN_BOTTOM, scale, scale);
 	}
 
 	//r->drawRect(m_bounds->getMinX(), m_bounds->getMinY(), m_bounds->getWidth(), m_bounds->getHeight());

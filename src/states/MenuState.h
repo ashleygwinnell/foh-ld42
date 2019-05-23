@@ -3,6 +3,7 @@
 #define ARK2D_DEFAULTGAME_MENUSTATE_H_
 
 #include <ARK2D/Core/State/GameState.h>
+#include "ArmorGamesState.h"
 
 class DefaultGame;
 
@@ -15,6 +16,8 @@ class MenuState : public GameState {
 		static const int MENU_INSTRUCTIONS = 1;
 		static const int MENU_EXIT = 2;
 		static const int MENU_END = MENU_EXIT;
+
+		ArmorGamesOverlay* armorGamesOverlay;
 
 		Image* logo;
 		Image* imageGradient;
@@ -58,6 +61,7 @@ class MenuState : public GameState {
 		float getSettingsButtonsX();
 
 		MenuState();
+		float getOutYMultiplier();
 		void enter(GameContainer* container, StateBasedGame* game, GameState* from);
 		void leave(GameContainer* container, StateBasedGame* game, GameState* to);
 

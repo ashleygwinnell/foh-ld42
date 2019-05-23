@@ -16,11 +16,14 @@
 #include "states/SummaryState.h"
 #include "states/UpgradesState.h"
 #include "states/CreditsState.h"
+#include "states/ArmorGamesState.h"
+#include "states/AutoplayFixState.h"
 
 #include "util/FMOD.h"
 
 #include <ARK2D/Core/Graphics/ScreenRecorder.h>
-//#include <ARK2D/Core/Graphics/Shaders/HSVShader.h>
+#include <ARK2D/Core/Graphics/Shaders/HSVShader.h>
+#include <ARK2D/Core/Graphics/Shaders/GrainShader.h>
 
 class StatesList {
 	public:
@@ -33,9 +36,24 @@ class StatesList {
 		static const unsigned int STATE_SUMMARY = 6;
 		static const unsigned int STATE_UPGRADES = 7;
 		static const unsigned int STATE_CREDITS = 8;
+		static const unsigned int STATE_ARMORGAMES = 9;
+		static const unsigned int STATE_AUTOPLAYFIX = 10;
 };
 
 class ThreeSliceButton {
+	public:
+		static Image* s_buttonBackgroundLeft;
+		static Image* s_buttonBackgroundMiddle;
+		static Image* s_buttonBackgroundRight;
+		static Image* s_buttonBorderLeft;
+		static Image* s_buttonBorderMiddle;
+		static Image* s_buttonBorderRight;
+		static void init();
+		static void draw(int x, int y, int width);
+		static void draw(int x, int y, int width, uint32_t bgcolor);
+};
+
+class ThreeSliceSmallerButton {
 	public:
 		static Image* s_buttonBackgroundLeft;
 		static Image* s_buttonBackgroundMiddle;
@@ -58,9 +76,27 @@ class MyTextBubble {
 		static void draw(string text, int x, int y, int width);
 };
 
+class KongStatsSubmit {
+
+};
+
+class StatsSubmit {
+public:
+	string loggedInAs;
+	string gameId;
+	string apiKey;
+	string guestAccessKey;
+	string guestAccessUrl;
+	void init();
+	void submit(string name, int val);
+	void updateStats();
+
+};
 
 class DefaultGame : public StateBasedGame {
 	public:
+
+
 
 		BlankState* stateBlank = NULL;
 		SplashState* stateSplash = NULL;
@@ -70,13 +106,17 @@ class DefaultGame : public StateBasedGame {
 		SummaryState* stateSummary = NULL;
 		UpgradesState* stateUpgrades = NULL;
 		CreditsState* stateCredits = NULL;
+		ArmorGamesState* stateArmorGames = NULL;
+		AutoplayFixState* stateAutoplayFix = NULL;
 
 		Image* spritesheet = NULL;
 		SpriteSheetDescription* desc = NULL;
 
-		ARK::Core::Font::BMFont* font = NULL;
+		ARK::Core::Font::Font* font = NULL;
 
-		//ARK::Core::Graphics::HSVShader* hsvShader;
+		ARK::Core::Graphics::HSVShader* hsvShader;
+		ARK::Core::Graphics::GrainShader* grainShader;
+		ARK::Core::Graphics::FBO* grainFBO;
 
 		int m_coins;
 
@@ -119,9 +159,11 @@ class DefaultGame : public StateBasedGame {
 		float m_floor;
 
 		KeyPairFile* m_save = NULL;
+		StatsSubmit* m_stats = NULL;
 
 		GIFRecorder* m_recorder;
 		static bool s_debug;
+		static bool s_armorGames;
 
 		DefaultGame(string title);
 		void updateAudioVolumes(bool save=true);

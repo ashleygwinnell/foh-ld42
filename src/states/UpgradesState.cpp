@@ -153,6 +153,11 @@ void upgradesEvent_buy() {
 				dg->m_save->set("purchasedAnything", true);
 				dg->m_save->set("coins", (unsigned int)dg->m_coins);
 				dg->m_save->save();
+				dg->m_stats->submit("Upgraded", 1);
+
+				if (dg->stateUpgrades->hasAllUpgrades()) {
+					dg->m_stats->submit("All Upgrades", 1);
+				}
 
 				// if (u->type == Upgrade::UPGRADE_TYPE_GAS ||
     //                 u->type == Upgrade::UPGRADE_TYPE_FLAMES ||
@@ -514,7 +519,6 @@ void UpgradesState::init(GameContainer* container, StateBasedGame* game) {
 	u->icon = SpriteSheetStore::getImage("sprites/upgrades/key.png");
 	m_upgradeData.push_back(u);
 
-	//
 
 
 
@@ -601,6 +605,18 @@ void UpgradesState::init(GameContainer* container, StateBasedGame* game) {
 }
 bool UpgradesState::hasAnyUpgrade() {
 	return m_purchasedAnything;
+}
+bool UpgradesState::hasAllUpgrades() {
+	for(int i = 0; i < m_upgradeData.size(); i++) {
+		Upgrade* u = m_upgradeData.at(i);
+		//bool b = dg->m_save->getBoolean(StringUtil::append("upgradePurchased_", u->id), false);
+		bool b = u->purchased;
+		//if (!->purchased) {
+		if (!b) {
+			return false;
+		}
+	}
+	return true;
 }
 Upgrade* UpgradesState::getUpgradeById(unsigned int id) {
 	for(int i = 0; i < m_upgradeData.size(); i++) {
@@ -716,25 +732,34 @@ void UpgradesState::update(GameContainer* container, StateBasedGame* game, GameT
 	DefaultGame* dg = DefaultGame::getInstance();
 	Input* i = ARK2D::getInput();
 
-	if (i->isKeyPressed(Input::KEY_I)) {
-		dg->m_coins += 50;
-	}
-	if (i->isKeyPressed(Input::KEY_U)) {
-		for(unsigned int i = 0; i < m_upgradeData.size(); i++) {
-			m_upgradeData[i]->purchased = true;
-			dg->m_save->set(StringUtil::append("upgradePurchased_", m_upgradeData[i]->id), true);
-			dg->m_save->set("purchasedAnything", true);
-			dg->m_save->save();
+	if (DefaultGame::s_debug) {
+		if (i->isKeyPressed(Input::KEY_I)) {
+			dg->m_coins += 50;
 		}
-		upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_HP_3));
-		upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_FLAMES_CAPACITY_LRG));
-		upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_GAS_CAPACITY_LRG));
-		upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_WALLET_SIZE_LRG));
-		upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_FAST_FEET));
-		upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_NIGHT_VISION));
-		//upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_BASEMENT_KEYS));
+		if (i->isKeyPressed(Input::KEY_U)) {
+			for(unsigned int i = 0; i < m_upgradeData.size(); i++) {
+				m_upgradeData[i]->purchased = true;
+				dg->m_save->set(StringUtil::append("upgradePurchased_", m_upgradeData[i]->id), true);
+				dg->m_save->set("purchasedAnything", true);
+				dg->m_save->save();
+			}
+			upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_HP_3));
+			upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_FLAMES_CAPACITY_LRG));
+			upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_GAS_CAPACITY_LRG));
+			upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_WALLET_SIZE_LRG));
+			upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_FAST_FEET));
+			upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_NIGHT_VISION));
+			//upgrades_setExclusiveEquippedForType(getUpgradeById(Upgrade::UPGRADE_BASEMENT_KEYS));
+
+			if (hasAllUpgrades()) {
+				dg->m_stats->submit("All Upgrades", 1);
+			}
+		}
 	}
 
+	if (DefaultGame::s_armorGames) {
+		//dg->stateMenu->armorGamesOverlay->update();
+	}
 
 	if (m_messageTimer > 0.0f) {
 		m_messageTimer += timer->getDelta();
@@ -802,6 +827,17 @@ signed int UpgradesState::getPointerOverButtonIndex() {
 		}
 	}
 	return result;
+}
+
+float UpgradesState::getOutYMultiplier() {
+	float mult = 0;
+	if (m_introTimer > 0.0f) {
+		mult = Easing::easebetween(Easing::QUADRATIC_OUT, m_introTimer, 1.0f, 0.0f, m_introDuration);
+	}
+	else if (m_outroTimer > 0.0f) {
+		mult = Easing::easebetween(Easing::QUADRATIC_OUT, m_outroTimer, 0.0f, 1.0f, m_outroDuration);
+	}
+	return mult;
 }
 
 void UpgradesState::render(GameContainer* container, StateBasedGame* game, Renderer* r) {
@@ -878,6 +914,10 @@ void UpgradesState::render(GameContainer* container, StateBasedGame* game, Rende
 	ThreeSliceButton::draw(m_buttonPlay->transform.position.x, baseUIY+m_buttonPlay->transform.position.y, m_buttonPlay->getWidth());
 	iconPlay->drawCentered(m_buttonPlay->transform.position.x, baseUIY+m_buttonPlay->transform.position.y); //dg->font->drawString("BACK", m_buttonBack->transform.position.x - 2.0f, baseUIY+m_buttonBack->transform.position.y + 2.0f, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 1.0f);
 	//dg->font->drawString("PLAY", m_buttonPlay->transform.position.x - 2.0f, baseUIY+m_buttonPlay->transform.position.y + 2.0f, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 1.0f);
+
+	if (DefaultGame::s_armorGames) {
+		//dg->stateMenu->armorGamesOverlay->render();
+	}
 
 
 	for(int i = 0; i < m_upgradeButtons->size(); i++) {
@@ -988,6 +1028,10 @@ bool UpgradesState::keyPressed(unsigned int key) {
 	for(int i = 0; i < m_upgradeButtons->size(); i++) {
 		m_upgradeButtons->at(i)->keyPressed(key);
 	}
+	if (DefaultGame::s_armorGames) {
+        DefaultGame* dg = DefaultGame::getInstance();
+		//dg->stateMenu->armorGamesOverlay->keyPressed(key);
+	}
 	return false;
 }
 bool UpgradesState::keyReleased(unsigned int key) {
@@ -1009,15 +1053,24 @@ bool UpgradesState::keyReleased(unsigned int key) {
 
 	if (!released) m_overButtonIndex = -1;
 
+	if (DefaultGame::s_armorGames) {
+        DefaultGame* dg = DefaultGame::getInstance();
+		//dg->stateMenu->armorGamesOverlay->keyReleased(key);
+	}
+
 	return false;
 }
 bool UpgradesState::mouseMoved(int x, int y, int oldx, int oldy) {
-	m_buttonUpgradeBuy->mouseMoved(x, y, oldx, oldy);
+    DefaultGame* dg = DefaultGame::getInstance();
+    m_buttonUpgradeBuy->mouseMoved(x, y, oldx, oldy);
 	m_buttonUpgradeEquip->mouseMoved(x, y, oldx, oldy);
 	m_buttonBack->mouseMoved(x, y, oldx, oldy);
 	m_buttonPlay->mouseMoved(x, y, oldx, oldy);
 	for(int i = 0; i < m_upgradeButtons->size(); i++) {
 		m_upgradeButtons->at(i)->mouseMoved(x, y, oldx, oldy);
+	}
+	if (DefaultGame::s_armorGames) {
+		//dg->stateMenu->armorGamesOverlay->mouseMoved(x, y, oldx, oldy);
 	}
 	return false;
 }

@@ -58,7 +58,7 @@ void InGameState::leave(GameContainer* container, StateBasedGame* game, GameStat
 	DefaultGame* dg = DefaultGame::getInstance();
 	if (m_level > 0) m_firstPlay = false;
 	m_introMessageTimer = 0;
-	//dg->hsvShader->set(1.0f, 1.0f, 1.0f);
+	dg->hsvShader->set(1.0f, 1.0f, 1.0f);
 }
 
 void InGameState::init(GameContainer* container, StateBasedGame* game) {
@@ -114,6 +114,8 @@ void InGameState::init(GameContainer* container, StateBasedGame* game) {
 
 	m_startWaveTimer = 0.0f;
 	m_startWaveDuration = 2.5f;
+
+	m_paused = false;
 
 	m_introMessageIndex = 0;
 	m_introMessages = {
@@ -741,7 +743,7 @@ void InGameState::startWave(int level) {
 	}
 	else if (m_level == 7) { // level 8. circle pit, 4 med (16) + 6 flying, 6 mini = 28 shots.
 
-		arenaClosingSpeed = 6;
+		arenaClosingSpeed = 4;
 		m_darknessAlpha = 1.0f;
 
 		float cx = arenaLeftX + (arenaWidth*0.5f);
@@ -760,12 +762,12 @@ void InGameState::startWave(int level) {
 			SpawnPoint one;
 			one.x = cx;
 	        one.y = cy;
-	        MathUtil::moveAngle<float>(one.x, one.y, j * 90, arenaHeight * 0.4f);
+	        MathUtil::moveAngle<float>(one.x, one.y, j * 90, arenaHeight * 0.45f);
 
 			for(int i = 0; i < 1; i++) {
 				SpawnEnemyEvent ev;
 				ev.enemyType = ET_MED;
-				ev.delay = (2.0f*j) + (i * 1.2f);
+				ev.delay = 2.0f + (2.0f*j) + (i * 1.2f);
 				one.m_spawnEnemies.push_back(ev);
 			}
 			m_spawns.push_back(one);
@@ -808,7 +810,7 @@ void InGameState::startWave(int level) {
 	}
 	else if (m_level == 8) { // level 9, 4 spitting enemies (12), 2 med enemies(8), 6 flying enemies (6), 2 small (4) = 30 shots.
 
-		arenaClosingSpeed = 5;
+		arenaClosingSpeed = 4;
 		m_darknessAlpha = 1.0f;
 
 		startFireAt(arenaLeftX + 5, arenaTopY + 5);
@@ -1011,7 +1013,8 @@ void InGameState::startWave(int level) {
 	// grid of fire? spawns interspersed.
 
     DefaultGame* dg = DefaultGame::getInstance();
-	//dg->hsvShader->set(0.04f * float(level), 1.0, 1.0f);
+	dg->hsvShader->set(0.005f * float(level), 1.0, 1.0f);
+	//dg->hsvShader->set(0.1f * float(level), 1.0, 1.0f);
 
 }
 
@@ -1270,6 +1273,8 @@ void InGameState::update(GameContainer* container, StateBasedGame* game, GameTim
 
 		}
 	}
+
+
 }
 void InGameState::doCollisions() {
 

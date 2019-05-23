@@ -38,6 +38,8 @@ class Enemy : public Object {
 
 		EnemyType m_type;
 
+		Animation* m_animation;
+
 		bool m_followPlayer;
 		float m_followPlayerDistance;
 		bool m_followVelocity;
@@ -53,7 +55,6 @@ class Enemy : public Object {
 		int m_hitHealth;
 		float m_hitTimer;
 		float m_hitDuration;
-		Animation* m_animation;
 
 		int m_dropsCoinAmount;
 		float m_dropsCoinChance;
@@ -85,6 +86,7 @@ class Enemy : public Object {
 
 		float m_speedMin;
 		float m_speedMax;
+		float m_speed;
 
 		Enemy();
 		void checkPlayerCollisions(bool firstPass, bool movePlayer);

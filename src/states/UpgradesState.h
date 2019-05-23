@@ -127,7 +127,9 @@ class UpgradesState : public GameState {
 		bool hasNightVision();
 		bool hasHealthVision();
 		bool hasAnyUpgrade();
+		bool hasAllUpgrades();
 
+		float getOutYMultiplier();
 
 		UpgradesState();
 		void enter(GameContainer* container, StateBasedGame* game, GameState* from);

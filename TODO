@@ -16,7 +16,7 @@ DONE - POST LD
 - Balancing tweaks (fire stays alive slightly longer).
 - Intro/player speech message.
 - Add rotate effect between levels.
-- co2 boots upgrade
+- co2 boots upgrade / speed boots upgrade
 - tutorial overlay
 - fix some of the icons
 - make fire boots togglable.
@@ -27,11 +27,20 @@ DONE - POST LD
 - level 10
 - Iconise the play/upgrades/back buttons.
 - mute sound/music buttons.
+- game save data bug.
+- game end cutscene + credits.
+- Fix emscripten fullscreen mode.
+- added discord button/link
+- foh logo fade to green and back.
+- flame boots cannot be turned off
+- start with magnet?!!
+- adjust movement behaviour of coins -- too linear
+- re-balance gameplay.
 
 TODO
-- game end cutscene + credits.
-- re-balance gameplay.
-- Fix emscripten fullscreen mode.
+
+Feedback
+good game, but i think Co2 should work differently. it would seem logical that you could stop the fire that the slugs shoot at you without just running away. i think you should be able to shoot it at the fire and put it out even if the fire is in the middle of its arc. also, if you step on a fire and lose a life, it should go out. its dumb otherwise
 
 MAYBE DO
 - greyscale when getting further into game.

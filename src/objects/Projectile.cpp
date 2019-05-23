@@ -54,7 +54,7 @@ void Projectile::reset() {
 	m_velocity->set(0.0f, 0.0f);
 
 	m_introTimer = 0.01f;
-	m_introDuration = 0.25f;
+	m_introDuration = 0.175f;
 
 	m_isFromPlayer = false;
 	m_grounded = false;
