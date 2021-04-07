@@ -2,6 +2,8 @@
 #include "MenuState.h"
 #include "../DefaultGame.h"
 
+#include <ARK2D/Core/Util/HTML5Helper.h>
+
 MenuState::MenuState():
 	GameState() {
 

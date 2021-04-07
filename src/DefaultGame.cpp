@@ -94,13 +94,13 @@ void MyTextBubble::draw(string text, int x, int y, int width) {
 	DefaultGame::getInstance()->font->asFont()->drawString(text, x - 1, y+1, Renderer::ALIGN_CENTER, Renderer::ALIGN_CENTER, 0.0f, 0.75f);
 
 }
-extern "C" void EMSCRIPTEN_KEEPALIVE emscripten_html5helper_setKongUsername(char* href) {
-	ARK2D::getLog()->e(StringUtil::append("setting kong username in c :", string(href)));
-	DefaultGame::getInstance()->m_stats->loggedInAs = href;
-	DefaultGame::getInstance()->m_stats->updateStats();
-
-
-}
+#ifdef ARK2D_EMSCRIPTEN_JS
+    extern "C" void EMSCRIPTEN_KEEPALIVE emscripten_html5helper_setKongUsername(char* href) {
+        ARK2D::getLog()->e(StringUtil::append("setting kong username in c :", string(href)));
+        DefaultGame::getInstance()->m_stats->loggedInAs = href;
+        DefaultGame::getInstance()->m_stats->updateStats();
+    }
+#endif
 
 void StatsSubmit::init() {
 	loggedInAs = "";
@@ -139,18 +139,20 @@ void StatsSubmit::init() {
 	#endif
 }
 void StatsSubmit::submit(string name, int val) {
-	EM_ASM_ARGS({
-		var name = UTF8ToString($0);
-		var val = $1;
-		console.error("STATS SUBMIT: " + name + " = " + val);
-		if (window.location.href.indexOf("konggames.com") >= 0) {
-			if (!window.kongregate) {
-				console.warn("cannot submit stat as kong not loaded yet.");
-				return;
-			}
-			window.kongregate.stats.submit(name, val); // Replace / 136572
-		}
-	}, name.c_str(), val);
+    #ifdef ARK2D_EMSCRIPTEN_JS
+        EM_ASM_ARGS({
+            var name = UTF8ToString($0);
+            var val = $1;
+            console.error("STATS SUBMIT: " + name + " = " + val);
+            if (window.location.href.indexOf("konggames.com") >= 0) {
+                if (!window.kongregate) {
+                    console.warn("cannot submit stat as kong not loaded yet.");
+                    return;
+                }
+                window.kongregate.stats.submit(name, val); // Replace / 136572
+            }
+        }, name.c_str(), val);
+    #endif
 }
 void StatsSubmit::updateStats() {
 	// Update stats.
